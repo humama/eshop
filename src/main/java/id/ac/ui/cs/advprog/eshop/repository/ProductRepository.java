@@ -37,4 +37,8 @@ public class ProductRepository {
             }
         }
     }
+
+    public void delete(Long id) {
+        productData.removeIf(product -> product.getId().equals(id));
+    }
 }
