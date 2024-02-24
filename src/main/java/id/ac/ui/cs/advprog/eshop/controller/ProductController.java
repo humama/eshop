@@ -1,7 +1,9 @@
 package id.ac.ui.cs.advprog.eshop.controller;
 import id.ac.ui.cs.advprog.eshop.model.Car;
 import id.ac.ui.cs.advprog.eshop.model.Product;
-import id.ac.ui.cs.advprog.eshop.service.CarServiceImpl;
+import id.ac.ui.cs.advprog.eshop.service.CarService;
+import id.ac.ui.cs.advprog.eshop.service.FindCarService;
+import id.ac.ui.cs.advprog.eshop.service.EditCarService;
 import id.ac.ui.cs.advprog.eshop.service.ProductService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +63,9 @@ public class ProductController {
 @RequestMapping("/car")
 class CarController extends ProductController{
     @Autowired
-    private CarServiceImpl carservice;
+    private CarService carservice;
+    private EditCarService editcarservice; 
+    private FindCarService findcarservice;
 
     @GetMapping("/createCar")
     public String createCarPage(Model model){
@@ -78,14 +82,14 @@ class CarController extends ProductController{
 
     @GetMapping("/listCar")
     public String carListPage(Model model){
-        List<Car> allCars = carservice.findAll();
+        List<Car> allCars = findcarservice.findAll();
         model.addAttribute("cars", allCars);
         return "carList";
     }
 
     @GetMapping("/editCar/{carId}")
     public String editCarPage(@PathVariable String carId, Model model) {
-        Car car = carservice.findById(carId);
+        Car car = findcarservice.findById(carId);
         model.addAttribute("car", car);
         return "editCar";
     }
@@ -93,14 +97,14 @@ class CarController extends ProductController{
     @PostMapping("/editCar")
     public String editCarPost(@ModelAttribute Car car, Model model) {
         System.out.println(car.getCarId());
-        carservice.update(car.getCarId(), car);
+        editcarservice.update(car.getCarId(), car);
 
         return "redirect:listCar";
     }
 
     @PostMapping("/deleteCar")
     public String deleteCar(@RequestParam("carId") String carId){
-        carservice.deleteCarById(carId);
+        editcarservice.deleteCarById(carId);
         return "redirect:listCar";
     }
 }
