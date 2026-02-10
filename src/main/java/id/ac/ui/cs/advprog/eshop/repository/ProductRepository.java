@@ -30,6 +30,19 @@ public class ProductRepository {
         for(Product p : productData){
             if(id.equals(p.getProductId())) return p;
         }
+    }
+
+    public Product update(Product product){
+        if(product == null || product.getProductId() == null) return null;
+        for(int i = 0; i < productData.size(); i++){
+            Product p = productData.get(i);
+            if(p.getProductId() != null && p.getProductId().equals(product.getProductId())){
+                p.setProductName(product.getProductName());
+                p.setProductQuantity(product.getProductQuantity());
+                productData.set(i, p);
+                return p;
+            }
+        }
         return null;
     }
 }
