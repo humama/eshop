@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ProductServiceImpl implements ProductService{
@@ -17,6 +18,9 @@ public class ProductServiceImpl implements ProductService{
 
     @Override
     public Product create(Product product){
+        if(product.getProductId() == null || product.getProductId().isEmpty()){
+            product.setProductId(UUID.randomUUID().toString());
+        }
         productRepository.create(product);
         return product;
     }
@@ -27,5 +31,15 @@ public class ProductServiceImpl implements ProductService{
         List<Product> allProducts = new ArrayList<>();
         productIterator.forEachRemaining(allProducts::add);
         return allProducts;
+    }
+
+    @Override
+    public Product findById(String id) {
+        return productRepository.findById(id);
+    }
+
+    @Override
+    public Product update(Product product) {
+        return productRepository.update(product);
     }
 }
