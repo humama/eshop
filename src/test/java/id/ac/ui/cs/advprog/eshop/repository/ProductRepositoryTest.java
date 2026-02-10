@@ -19,6 +19,7 @@ class ProductRepositoryTest {
     ProductRepository productRepository;
     @BeforeEach
     void setUp() {
+        productRepository = new ProductRepository();
     }
     @Test
     void testCreateAndFind(){
@@ -62,5 +63,55 @@ class ProductRepositoryTest {
         savedProduct = productIterator.next();
         assertEquals(product2.getProductId(), savedProduct.getProductId());
         assertFalse(productIterator.hasNext());
+    }
+
+    @Test
+    void update_existingProduct_updatesFields(){
+        Product p = new Product();
+        p.setProductId("id-1");
+        p.setProductName("Old");
+        p.setProductQuantity(5);
+        productRepository.create(p);
+
+        Product updated = new Product();
+        updated.setProductId("id-1");
+        updated.setProductName("New");
+        updated.setProductQuantity(10);
+
+        Product result = productRepository.update(updated);
+
+        assertNotNull(result);
+        assertEquals("New", result.getProductName());
+        assertEquals(10, result.getProductQuantity());
+    }
+
+    @Test
+    void update_nonExisting_returnsNull(){
+        Product updated = new Product();
+        updated.setProductId("missing");
+        updated.setProductName("New");
+        updated.setProductQuantity(10);
+
+        Product result = productRepository.update(updated);
+        assertNull(result);
+    }
+
+    @Test
+    void delete_existing_removesAndReturnsTrue(){
+        Product p = new Product();
+        p.setProductId("id-2");
+        p.setProductName("ToDelete");
+        p.setProductQuantity(1);
+        productRepository.create(p);
+
+        boolean deleted = productRepository.deleteById("id-2");
+        assertTrue(deleted);
+        assertNull(productRepository.findById("id-2"));
+    }
+
+    @Test
+    void delete_nonExisting_returnsFalse(){
+        boolean deleted = productRepository.deleteById("nope");
+        assertFalse(deleted);
     }
 }
