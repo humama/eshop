@@ -20,13 +20,16 @@ public class ProductRepository {
         return productData.iterator();
     }
 
+    public boolean deleteById(String id){
+        if(id == null) return false;
+        return productData.removeIf(p -> id.equals(p.getProductId()));
+    }
+
     public Product findById(String id){
+        if(id == null) return null;
         for(Product p : productData){
-            if(p.getProductId() != null && p.getProductId().equals(id)){
-                return p;
-            }
+            if(id.equals(p.getProductId())) return p;
         }
-        return null;
     }
 
     public Product update(Product product){
