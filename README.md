@@ -20,7 +20,7 @@ Berikut prinsip-prinsip clean code yang saya terapkan dan di mana mereka muncul 
   - Memisahkan controller, service, dan repository sehingga masing-masing lapisan punya tanggung jawab jelas.
 
 - Meaningful Names
-  - Nama method dan variabel (mis. `findById`, `deleteById`, `productRepository`) mudah dimengerti.
+  - Nama method dan variabel (misal. `findById`, `deleteById`, `productRepository`) mudah dimengerti.
 
 - Keep methods small and focused
   - Metode di service dan repository kecil dan melakukan satu aksi.
@@ -56,7 +56,7 @@ Berikut beberapa kelemahan praktis dari implementasi saat ini dan rekomendasi pe
    - Dan ubah controller menjadi @PostMapping("/delete/{id}") atau @DeleteMapping.
 
 2) Input validation hilang
-   - Masalah: Binding form ke `Product` tanpa validasi dapat menyebabkan exception (mis. field kuantitas kosong -> NumberFormatException) dan data invalid tersimpan.
+   - Masalah: Binding form ke `Product` tanpa validasi dapat menyebabkan exception (misal. field kuantitas kosong -> NumberFormatException) dan data invalid tersimpan.
    - Perbaikan: Tambahkan validasi menggunakan bean validation (Jakarta Validation):
      - Tambahkan anotasi di model: `@NotBlank` pada `productName`, `@Min(0)` pada `productQuantity` (ubah tipe ke `Integer` untuk menangani null input dengan baik).
      - Di controller, terima `@Valid @ModelAttribute Product product, BindingResult result` dan tampilkan kembali form jika ada error.
@@ -105,3 +105,75 @@ private Integer productQuantity;
 
 ## Penutup
 Secara umum, perubahan-perubahan yang dilakukan mengikuti pola layer-service-repository dan prinsip clean-code dasar. Namun implementasi ini masih minimal (in-memory, tidak ada validasi, tidak ada proteksi autentikasi/otorisasi). Untuk produksi, langkah-langkah perbaikan yang saya sebutkan harus diterapkan.
+
+## Refleksi 2
+
+1) Perasaan setelah menulis unit test, dan berapa banyak unit test yang perlu dibuat
+
+- Perasaan: Menulis unit test terasa membantu karena memaksa saya menjelaskan dan mengunci perilaku yang diharapkan dari modul (misal. update/delete pada repository). Unit test membuat regresi terlihat lebih cepat dan meningkatkan kepercayaan saat refactor.
+- Berapa banyak test per kelas: tidak ada angka pasti. Fokusnya adalah kualitas, bukan kuantitas. Sikap yang baik:
+  - Tulis test untuk jalur utama (happy path).
+  - Tambahkan test untuk edge cases (misal. null, input invalid, boundary values).
+  - Tambahkan test untuk jalur error/eksepsi dan kasus non-eksistensi.
+  - Untuk tiap public method, ada 1..N test yang memverifikasi perilaku penting; biasanya 3	6 test per metode yang non-trivial.
+
+- Bagaimana memastikan unit tests cukup:
+  - Gunakan pendekatan berbasis risiko: uji bagian kode yang paling kritis dan rentan kesalahan lebih lengkap.
+  - Gunakan code coverage sebagai metrik untuk melihat area yang belum diuji, tapi jangan jadikan angka (misal. 100%) sebagai satu-satunya tujuan.
+  - Terapkan mutation testing (tools seperti PIT) untuk memastikan test benar-benar menangkap perubahan perilaku.
+  - Pastikan tests memverifikasi behavior (kontrak publik), bukan implementation details.
+
+- Tentang code coverage: ini berguna untuk mengetahui garis batas area yang belum diuji. Tetapi 100% coverage tidak berarti kode bebas bug: coverage hanya menunjukkan bahwa baris/branch dijalankan oleh test, bukan bahwa semua kombinasi input, kondisi rasio, concurrency, atau integrasi eksternal telah diuji.
+
+2) Duplikasi pada functional test suites dan kualitas kode
+
+- Situasi: Anda membuat kelas functional test baru yang menyalin setup dan variabel dari test sebelumnya. Ini cepat, tapi menimbulkan duplikasi.
+
+- Potensi masalah clean code:
+  - Violation of DRY: banyak setup yang identik di banyak kelas membuat perubahan pada setup harus diulang di banyak tempat.
+  - Maintainability: saat konfigurasi berubah (misal. baseUrl, port handling, WebDriver options), Anda harus mengubah banyak file.
+  - Readability: panjang file dengan boilerplate setup menyembunyikan intent test.
+  - Test fragility: duplikasi pengaturan waktu/wait/driver options bisa menyebabkan flakiness yang sulit ditangani di satu tempat.
+
+- Rekomendasi perbaikan (cara membuat kode lebih bersih):
+  1. Extract shared setup into a base test class
+    - Buat `AbstractSeleniumTest` yang mengandung `@LocalServerPort`, `@Value`, `@BeforeEach` setup, dan helper seperti `getBaseUrl()`.
+    - Semua functional test extends class ini -> mengurangi duplikasi.
+
+  2. Use Page Object Pattern
+    - Buat class page object untuk halaman (CreateProductPage, ProductListPage) yang membungkus locator dan aksi (fillName, fillQuantity, submit, getTableRows).
+    - Test menjadi: open page, page.fillName(...), page.submit(), assert pageList.contains(...)
+    - Ini membuat tests lebih deklaratif dan lebih mudah dipelihara saat UI berubah.
+
+  3. Centralize WebDriver configuration
+    - Jika menggunakan SeleniumJupiter atau WebDriverManager, buat helper untuk ChromeOptions (headless, timeouts) agar konsisten.
+
+  4. Parameterize or reuse tests where possible
+    - Jika Anda ingin memeriksa beberapa data input, gunakan `@ParameterizedTest` atau loop data-driven testing alih-alih menyalin kelas test.
+
+  5. Separate unit tests and functional tests
+    - Simpan functional tests di source set atau task yang terpisah (`functionalTest`) sehingga CI dapat menjalankannya terpisah dari unit tests.
+
+- Contoh struktur base test (singkat):
+
+```java
+@SpringBootTest(webEnvironment = RANDOM_PORT)
+@ExtendWith(SeleniumJupiter.class)
+public abstract class AbstractSeleniumTest {
+   @LocalServerPort
+   protected int serverPort;
+
+   @Value("${app.baseUrl:http://localhost}")
+   protected String testBaseUrl;
+
+   protected String baseUrl() {
+      return String.format("%s:%d", testBaseUrl, serverPort);
+   }
+}
+```
+
+Kemudian `CreateProductFunctionalTest` hanya fokus pada langkah user actions, tidak lagi boilerplate konfigurasi.
+
+Kesimpulan singkat:
+- Unit tests membuat saya merasa lebih percaya saat mengubah kode, tapi harus ditulis cerdas (happy path + edge cases). Code coverage membantu tetapi bukan bukti bebas bug.
+- Untuk functional tests, hindari duplikasi: gunakan base class, page objects, dan central configuration agar kode test tetap bersih, mudah dipelihara, dan tahan terhadap perubahan UI.
