@@ -30,6 +30,7 @@ public class ProductRepository {
         for(Product p : productData){
             if(id.equals(p.getProductId())) return p;
         }
+        return null;
     }
 
     public Product update(Product product){
