@@ -1,3 +1,7 @@
+<details>
+
+  <summary>Reflection modul 1</summary>
+
 ## Refleksi 1: 
 
 Dokumen ini menjelaskan prinsip clean code dan praktik keamanan yang saya terapkan saat menambahkan fitur "edit product" dan "delete product" pada proyek Spring Boot sederhana ini. Juga berisi temuan kode yang perlu diperbaiki dan saran peningkatan.
@@ -177,3 +181,8 @@ Kemudian `CreateProductFunctionalTest` hanya fokus pada langkah user actions, ti
 Kesimpulan singkat:
 - Unit tests membuat saya merasa lebih percaya saat mengubah kode, tapi harus ditulis cerdas (happy path + edge cases). Code coverage membantu tetapi bukan bukti bebas bug.
 - Untuk functional tests, hindari duplikasi: gunakan base class, page objects, dan central configuration agar kode test tetap bersih, mudah dipelihara, dan tahan terhadap perubahan UI.
+</details>
+
+Saya sudah mencoba untuk deploy tetapi masih butuh kartu kredit jadi tidak bisa
+
+![alt text](image.png)
