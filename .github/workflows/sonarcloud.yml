@@ -48,23 +48,19 @@ jobs:
             exit 1
           fi
 
-      - name: Ensure SONAR_PROJECT_KEY and SONAR_ORGANIZATION are set
+      - name: Prepare Sonar args (organization optional)
+        id: prepare-args
         env:
-          SONAR_PROJECT_KEY: ${{ secrets.SONAR_PROJECT_KEY }}
           SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
         run: |
-          missing=0
-          if [ -z "$SONAR_PROJECT_KEY" ]; then
-            echo "::error::SONAR_PROJECT_KEY secret is not set.\nFind your Project Key in SonarCloud (Project -> Administration -> General Settings -> Project Key) and add it as a repo secret named SONAR_PROJECT_KEY." 
-            missing=1
+          # Build a single-line args string; include organization only if the secret is present.
+          ARGS=""
+          if [ -n "$SONAR_ORGANIZATION" ]; then
+            ARGS="$ARGS -Dsonar.organization=$SONAR_ORGANIZATION"
           fi
-          if [ -z "$SONAR_ORGANIZATION" ]; then
-            echo "::error::SONAR_ORGANIZATION secret is not set.\nFind your Organization Key in SonarCloud (Organization settings) and add it as a repo secret named SONAR_ORGANIZATION." 
-            missing=1
-          fi
-          if [ $missing -eq 1 ]; then
-            exit 1
-          fi
+          # Trim leading space
+          ARGS="$(echo $ARGS | sed 's/^ //')"
+          echo "SONAR_ARGS=$ARGS" >> $GITHUB_OUTPUT
 
       - name: Analyze with SonarCloud
         # You can pin the exact commit or the version.
@@ -74,17 +70,13 @@ jobs:
           # Generate a token on Sonarcloud.io, add it to the secrets of this repo with the name SONAR_TOKEN (Settings > Secrets > Actions > add new repository secret)
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          # Additional arguments for the SonarScanner CLI
-          args:
-            # Unique keys of your project and organization. You can find them in SonarCloud > Information (bottom-left menu)
-            # mandatory - set these as repository secrets so they are not stored in plain text in the workflow
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }}
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }}
-            # Comma-separated paths to directories containing main source files.
-            #-Dsonar.sources= # optional, default is project base directory
-            # Comma-separated paths to directories containing test source files.
-            #-Dsonar.tests= # optional. For more info about Code Coverage, please refer to https://docs.sonarcloud.io/enriching/test-coverage/overview/
-            # Adds more detail to both client and server-side analysis logs, activating DEBUG mode for the scanner, and adding client-side environment variables and system properties to the server-side log of analysis report processing.
-            #-Dsonar.verbose= # optional, default is false
+          # Additional arguments for the SonarScanner CLI (project/org added only if secrets exist)
+          args: ${{ steps.prepare-args.outputs.SONAR_ARGS }}
+          # Comma-separated paths to directories containing main source files.
+          #-Dsonar.sources= # optional, default is project base directory
+          # Comma-separated paths to directories containing test source files.
+          #-Dsonar.tests= # optional. For more info about Code Coverage, please refer to https://docs.sonarcloud.io/enriching/test-coverage/overview/
+          # Adds more detail to both client and server-side analysis logs, activating DEBUG mode for the scanner, and adding client-side environment variables and system properties to the server-side log of analysis report processing.
+          #-Dsonar.verbose= # optional, default is false
           # When you need the analysis to take place in a directory other than the one from which it was launched, default is .
           projectBaseDir: .
