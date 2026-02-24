@@ -44,6 +44,20 @@ jobs:
           ARGS="$(echo $ARGS | sed 's/^ //')"
           echo "SONAR_ARGS=$ARGS" >> $GITHUB_OUTPUT
 
+      - name: Verify Sonar projectKey present (or import binding)
+        run: |
+          CUR_ARGS="${{ steps.prepare-args.outputs.SONAR_ARGS }}"
+          echo "Prepared SONAR_ARGS: $CUR_ARGS"
+          if echo "$CUR_ARGS" | grep -q "sonar.projectKey"; then
+            echo "Project key present in SONAR_ARGS. Proceeding with analysis."
+            exit 0
+          fi
+          echo "::error::SONAR project key not present. The Sonar scanner requires a project key unless this repository is already bound to a SonarCloud project via the SonarCloud UI."
+          echo "Options to fix:"
+          echo " - Import the repository in SonarCloud (Organization -> Add project -> choose repo). After import, rerun this workflow." 
+          echo " - Or set the repository secret SONAR_PROJECT_KEY to your SonarCloud Project Key (Settings -> Secrets -> Actions)."
+          exit 1
+
       - name: Analyze with SonarCloud
         # You can pin the exact commit or the version.
         # uses: SonarSource/sonarcloud-github-action@v2.2.0
