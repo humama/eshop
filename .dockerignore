@@ -1,0 +1,11 @@
+/.gradle
+/build
+/.git
+/.github
+/.idea
+/out
+/.vscode
+gradle/wrapper
+**/*.iml
+node_modules
+/.DS_Store
