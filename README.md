@@ -183,6 +183,63 @@ Kesimpulan singkat:
 - Untuk functional tests, hindari duplikasi: gunakan base class, page objects, dan central configuration agar kode test tetap bersih, mudah dipelihara, dan tahan terhadap perubahan UI.
 </details>
 
+<details>
+
+  <summary>Reflection modul 2</summary>
+</details>
+
+<details>
+
+  <summary>Reflection modul 2</summary>
+
+## Refleksi Modul 2
+
+1) Code quality issue(s) yang saya perbaiki selama exercise dan strategi perbaikannya
+
+- Dependency / test engine mismatch
+  - Masalah: Build/test gagal karena versi JUnit/JUnit Platform dan dependensi pengujian (Selenium/Jupiter) tidak selaras, menyebabkan NoSuchMethodError dan kegagalan runtime pada pipeline.
+  - Strategi: Kembalikan ke versi yang dikelola oleh Spring Boot BOM (hilangkan override versi eksplisit), hapus dependensi redundan dari classpath unit-test yang menyebabkan konflik, dan jalankan ulang gradle test untuk memverifikasi perbaikan. Hasil: test engine selaras kembali dan runtime error hilang.
+
+- Thymeleaf template resolution (case-sensitive filenames)
+  - Masalah: @WebMvcTest gagal merender view dengan TemplateInputException karena nama file template tidak cocok (perbedaan kapitalisasi pada file `CreateProduct.html` / `createProduct.html`). Pada CI (Linux runner) filesystem case-sensitive memperparah masalah.
+  - Strategi: Perbaiki root cause dengan menyamakan nama view dan file template (rename ke lowercase sesuai view names), dan tambahkan import `ThymeleafAutoConfiguration` pada test slice agar view dapat dirender selama @WebMvcTest. Verifikasi dengan menjalankan controller tests.
+
+- Redirect loop / unsafe HTTP method for destructive action
+  - Masalah: `redirect:list` relative redirect menyebabkan loop pada beberapa kondisi; endpoint delete awalnya menggunakan GET yang tidak sesuai praktik REST.
+  - Strategi: Ubah redirect menjadi absolut `redirect:/product/list` untuk menghindari ambiguitas. Untuk delete, rekomendasi diterapkan — ubah ke POST/DELETE dan gunakan form dengan CSRF token; sementara itu tambahkan konfirmasi JS untuk mengurangi accidental deletes.
+
+- Missing/empty Sonar args and missing SONAR_TOKEN secret in workflow
+  - Masalah: SonarCloud action menjalankan container tanpa token atau dengan argumen kosong `-Dsonar.projectKey=` yang menyebabkan error pesan "Set the SONAR_TOKEN env variable." atau analisis kosong.
+  - Strategi: Update workflow untuk fail-fast jika `secrets.SONAR_TOKEN` kosong dan baca `sonar.projectKey` / `sonar.organization` dari repository secrets (`SONAR_PROJECT_KEY`, `SONAR_ORGANIZATION`). Berikan instruksi jelas pada README untuk menambahkan secrets.
+
+- Tests / coverage gaps
+  - Masalah: Tidak ada atau sedikit unit tests awalnya; beberapa behavior controller tidak tervalidasi.
+  - Strategi: Tambah unit tests untuk repository/service, dan MockMvc tests untuk controller. Jalankan test suite dan gunakan JaCoCo untuk melihat area yang kurang diuji; gunakan hasil tersebut untuk menambah test yang menargetkan jalur utama dan edge cases.
+
+Ringkasnya, strategi perbaikan saya selalu mengikuti pola: (1) reproduksi masalah secara lokal/CI, (2) analisis root-cause (logs, stack traces, file diffs), (3) buat perubahan kecil dan terfokus yang memecahkan akar masalah, (4) tambahkan test/verifikasi dan jalankan pipeline, (5) dokumentasikan perubahan dan langkah lanjutan.
+
+2) Apakah implementasi CI/CD saat ini memenuhi definisi Continuous Integration dan Continuous Deployment?
+
+Pendapat singkat: Secara fungsional pipeline mendekati prinsip Continuous Integration, dan ada langkah analisis kualitas otomatis; untuk Continuous Deployment, perlu beberapa perbaikan agar aman dan andal.
+
+- Continuous Integration (CI): Ya, sebagian besar terpenuhi. Workflow dijalankan pada push/pull_request dan melakukan build, menjalankan test-suite otomatis, dan melakukan analisis kode (SonarCloud). Ini mewujudkan integrasi berkala, umpan balik cepat atas regressions, dan pemeriksaan kualitas.
+
+- Continuous Deployment (CD): Belum sepenuhnya. Jika ada job deploy otomatis ke PaaS, itu memenuhi aspek otomatisasi, namun untuk menjadi CD yang matang kita butuh: lingkungan staging/production terpisah, promosi terkontrol (approval atau gating), rollback strategy, dan deployment-safe checks (mis. test coverage threshold, smoke tests, health checks) — beberapa hal ini belum diimplementasikan atau belum sepenuhnya otomatis/divalidasi di workflow saat ini.
+
+Alasan singkat (3+ kalimat): Workflow saat ini mengotomatiskan build, test, dan quality scan pada setiap commit/PR sehingga memenuhi inti CI. Namun deployment otomatis tanpa proteksi (misalnya tanpa gating, tanpa secrets/rollbacks, tanpa environment promotion) berisiko; sehingga CD-nya masih perlu penambahan keamanan dan kebijakan. Untuk benar-benar mencapai Continuous Deployment yang matang, saya sarankan menambahkan job deployment yang hanya berjalan ketika branch tertentu (mis. main) lulus serangkaian checks, menambahkan manual approval untuk production, dan menyiapkan monitoring/rollback otomatis.
+
+Rekomendasi perbaikan CI/CD singkat:
+- Tambahkan gating pada PR: jalankan unit + integration + smoke tests, dan hanya izinkan merge bila status sukses.
+- Pisahkan functional tests (Selenium) ke job tersendiri atau ke stage yang berjalan setelah build dan unit tests lulus; jalankan headless di CI dengan WebDriverManager atau gunakan testcontainers untuk environment yang stabil.
+- Tambahkan deployment pipeline yang mempromosikan artifact ke staging lalu produksi; gunakan approvals, health checks, dan otomatis rollback bila health check gagal.
+- Tambahkan metric/alerting (sentry, prometheus) dan integrasi deploy-notifications.
+
+--
+
 Saya sudah mencoba untuk deploy tetapi masih butuh kartu kredit jadi tidak bisa
 
 ![alt text](image.png)
+
+</details>
+
+</details>
