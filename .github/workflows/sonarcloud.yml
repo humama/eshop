@@ -18,6 +18,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          
+      - name: Make gradlew executable
+        run: chmod +x gradlew
 
       - name: Build and Analyze
         run: ./gradlew build sonar --no-daemon
