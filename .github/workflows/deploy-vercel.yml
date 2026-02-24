@@ -2,7 +2,6 @@ name: Deploy to Vercel
 
 on:
   push:
-    branches: [ main ]
 
 jobs:
   deploy:
@@ -14,6 +13,7 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
+          distribution: 'temurin'
           java-version: '21'
 
       - name: Build (bootJar)
@@ -26,6 +26,7 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--prod'
+          zeit-token: .
 
     # Note: This workflow expects the Vercel project to be configured to use the Dockerfile
     # in the repository (Vercel will detect Dockerfile and build a container). Alternatively,
