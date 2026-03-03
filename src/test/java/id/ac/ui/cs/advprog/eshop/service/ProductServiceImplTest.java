@@ -20,7 +20,7 @@ public class ProductServiceImplTest {
         repository = new ProductRepository();
         service = new ProductServiceImpl(repository);
         // inject repository into service via reflection
-        Field repoField = ProductServiceImpl.class.getDeclaredField("productRepository");
+        Field repoField = ProductServiceImpl.class.getDeclaredField("repository");
         repoField.setAccessible(true);
         repoField.set(service, repository);
     }
