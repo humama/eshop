@@ -33,9 +33,9 @@ class ProductControllerTest {
     @BeforeEach
     void setUp() {
         product = new Product();
-        product.setProductId("id1");
-        product.setProductName("Test Product");
-        product.setProductQuantity(5);
+        product.setId("id1");
+        product.setName("Test Product");
+        product.setQuantity(5);
     }
 
     @Test

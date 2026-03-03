@@ -186,11 +186,6 @@ Kesimpulan singkat:
 <details>
 
   <summary>Reflection modul 2</summary>
-</details>
-
-<details>
-
-  <summary>Reflection modul 2</summary>
 
 ## Refleksi Modul 2
 
@@ -242,4 +237,301 @@ Saya sudah mencoba untuk deploy tetapi masih butuh kartu kredit jadi tidak bisa
 
 </details>
 
+<details>
+
+  <summary>Reflection modul 3</summary>
+
+## Refleksi Modul 3
+
+## 1. Prinsip yang Diterapkan dalam Proyek
+
+Pada proyek ini, saya menerapkan prinsip SOLID, yaitu:
+
+- Single Responsibility Principle (SRP)
+
+- Open Closed Principle (OCP)
+
+- Liskov Substitution Principle (LSP)
+
+- Interface Segregation Principle (ISP)
+
+- Dependency Inversion Principle (DIP)
+
+Refactor dilakukan pada bagian:
+
+- Model (Product, Car)
+
+- Repository (Generic Repository)
+
+- Service (BaseService & GenericServiceImpl)
+
+- Controller (dipisah dan tidak menggunakan inheritance yang salah)
+
+Tujuan utama refactor adalah:
+
+- Mengurangi duplikasi kode
+
+- Membuat sistem lebih scalable
+
+- Mempermudah penambahan fitur baru
+
+- Membuat arsitektur lebih bersih
+
+<br>
+
+1. Apakah SRP Sudah Diterapkan?
+
+Ya, SRP sudah diterapkan.
+
+### Penjelasan SRP
+
+Single Responsibility Principle (SRP) menyatakan bahwa:
+
+- Sebuah class hanya boleh memiliki satu alasan untuk berubah.
+
+Artinya, satu class hanya memiliki satu tanggung jawab utama.
+
+### Implementasi dalam Proyek
+
+Struktur yang diterapkan:
+
+- Controller → Mengelola HTTP request & response
+
+- Service → Mengelola business logic
+
+- Repository → Mengelola akses data
+
+- Model → Merepresentasikan entitas/domain
+
+Contoh:
+
+### CarController
+
+Hanya bertanggung jawab pada request mapping /car/*
+
+### CarServiceImpl
+
+Hanya menangani business logic terkait Car
+
+### InMemoryRepository
+
+Hanya menangani penyimpanan data
+
+### Sebelum Refactor (Tidak SRP)
+
+Sebelumnya:
+
+- Banyak duplikasi logic
+
+- Repository dan Service melakukan transformasi data berlebihan
+
+- CarController mewarisi ProductController (tanggung jawab bercampur)
+
+### Setelah Refactor (SRP Terpenuhi)
+
+Setiap class memiliki satu tanggung jawab yang jelas.
+
+2. Apakah OCP Sudah Diterapkan?
+
+Ya, OCP sudah diterapkan.
+
+### Penjelasan OCP
+
+Open Closed Principle (OCP) menyatakan bahwa:
+
+- Software harus terbuka untuk ekstensi tetapi tertutup untuk modifikasi.
+
+Artinya, kita bisa menambahkan fitur baru tanpa mengubah kode yang sudah ada.
+
+### Implementasi dalam Proyek
+
+Saya membuat:
+
+```java
+BaseRepository<T>
+InMemoryRepository<T>
+BaseService<T>
+GenericServiceImpl<T>
+```
+Jika ingin menambah entitas baru, misalnya Laptop, cukup:
+
+```java
+class Laptop extends Product
+class LaptopRepository extends InMemoryRepository<Laptop>
+class LaptopServiceImpl extends GenericServiceImpl<Laptop>
+```
+Tanpa mengubah kode lama.
+
+### Keuntungan OCP dalam Proyek
+
+- Tidak perlu mengubah GenericServiceImpl
+
+- Tidak perlu mengubah InMemoryRepository
+
+- Risiko bug lebih kecil
+
+- Lebih scalable
+
+3. Apakah LSP Sudah Diterapkan?
+
+Ya, LSP sudah diterapkan.
+
+### Penjelasan LSP
+
+Liskov Substitution Principle (LSP) menyatakan bahwa:
+
+- Subclass harus dapat menggantikan superclass tanpa merusak program.
+
+### Implementasi
+```java
+public abstract class Product
+public class Car extends Product
+```
+Artinya:
+```java
+Product p = new Car();
+```
+Ini valid.
+
+Car tidak mengubah kontrak dari Product.
+Car hanya menambahkan atribut color.
+
+### Sebelum Refactor (Melanggar LSP)
+
+Sebelumnya:
+```java
+class CarController extends ProductController
+```
+Ini salah secara konsep, karena:
+CarController bukan bentuk khusus dari ProductController.
+
+Sekarang inheritance tersebut dihapus.
+
+4. Apakah ISP Sudah Diterapkan?
+
+Ya, ISP sudah diterapkan.
+
+### Penjelasan ISP
+
+Interface Segregation Principle (ISP) menyatakan bahwa:
+
+- Client tidak boleh dipaksa bergantung pada method yang tidak digunakannya.
+
+### Implementasi
+
+Saya membuat:
+```java
+public interface BaseService<T>
+public interface CarService extends BaseService<Car>
+public interface ProductService extends BaseService<Product>
+```
+Controller hanya bergantung pada:
+```java
+CarService
+```
+Bukan pada GenericServiceImpl secara langsung.
+
+Setiap interface spesifik pada domain masing-masing.
+
+5. Apakah DIP Sudah Diterapkan?
+
+Ya, DIP sudah diterapkan.
+
+### Penjelasan DIP
+
+Dependency Inversion Principle (DIP) menyatakan bahwa:
+
+- High-level module tidak boleh bergantung pada low-level module.
+Keduanya harus bergantung pada abstraksi.
+
+### Implementasi
+
+Controller:
+```java
+private final CarService carService;
+```
+Bukan:
+```java
+private CarServiceImpl carService;
+```
+Service:
+```java
+protected BaseRepository<T> repository;
+```
+Bukan:
+```java
+private InMemoryRepository repository;
+```
+Semua bergantung pada interface, bukan implementasi.
+
+## 2. Keuntungan Menerapkan SOLID
+### 1. Mudah Menambah Fitur Baru
+
+Menambah entitas baru tanpa mengubah kode lama.
+
+### 2. Mengurangi Duplikasi
+
+Generic repository dan service menghindari copy-paste.
+
+### 3. Mudah Unit Testing
+
+Karena menggunakan interface, bisa menggunakan mock.
+
+### 4. Lebih Mudah Maintenance
+
+Perubahan pada repository tidak mempengaruhi controller.
+
+### 5. Arsitektur Lebih Bersih
+
+Layering menjadi jelas:
+
+Controller → Service → Repository
+
+## 3. Kerugian Jika Tidak Menerapkan SOLID
+
+Jika tidak menerapkan SOLID:
+
+❌ Banyak Duplikasi
+
+Setiap entitas harus menulis ulang repository & service.
+
+❌ Sulit Menambah Fitur
+
+Menambah entitas baru harus modifikasi banyak class.
+
+❌ Risiko Bug Tinggi
+
+Perubahan kecil bisa merusak banyak bagian sistem.
+
+❌ Tight Coupling
+
+Controller tergantung langsung ke implementation.
+
+❌ Sulit Testing
+
+Tidak bisa melakukan mocking dengan mudah.
+
+### Kesimpulan Refleksi
+
+Dalam proyek ini:
+
+Prinsip	Status
+
+- SRP	✅ Sudah diterapkan
+- OCP	✅ Sudah diterapkan
+- LSP	✅ Sudah diterapkan
+- ISP	✅ Sudah diterapkan
+- DIP	✅ Sudah diterapkan
+
+Refactor berbasis SOLID membuat sistem:
+
+- Lebih modular
+
+- Lebih scalable
+
+- Lebih maintainable
+
+- Lebih sesuai dengan praktik clean architecture
+
+Penerapan SOLID sangat membantu dalam membangun sistem yang tidak hanya berjalan, tetapi juga mudah dikembangkan dan dirawat dalam jangka panjang.
 </details>
