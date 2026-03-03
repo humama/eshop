@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ProductServiceImpl extends GenericServiceImpl<Product> {
+public class ProductServiceImpl extends GenericServiceImpl<Product> implements ProductService {
 
     @Autowired
     public ProductServiceImpl(ProductRepository repository) {

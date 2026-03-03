@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CarServiceImpl extends GenericServiceImpl<Car> {
+public class CarServiceImpl extends GenericServiceImpl<Car> implements CarService {
 
     @Autowired
     public CarServiceImpl(CarRepository repository) {

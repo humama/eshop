@@ -1,5 +1,7 @@
 package id.ac.ui.cs.advprog.eshop.service;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import id.ac.ui.cs.advprog.eshop.model.Product;
@@ -20,7 +22,10 @@ public class GenericServiceImpl<T extends Product> implements BaseService<T> {
 
     @Override
     public List<T> findAll() {
-        return repository.findAll();
+        Iterator<T> productIterator = repository.findAll();
+        List<T> allProducts = new ArrayList<>();
+        productIterator.forEachRemaining(allProducts::add);
+        return allProducts;
     }
 
     @Override
@@ -34,7 +39,7 @@ public class GenericServiceImpl<T extends Product> implements BaseService<T> {
     }
 
     @Override
-    public void delete(String id) {
-        repository.delete(id);
+    public boolean delete(String id) {
+        return repository.delete(id);
     }
 }

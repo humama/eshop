@@ -9,5 +9,5 @@ public interface BaseService<T extends Product> {
     List<T> findAll();
     T findById(String id);
     T update(T entity);
-    void delete(String id);
+    boolean delete(String id);
 }

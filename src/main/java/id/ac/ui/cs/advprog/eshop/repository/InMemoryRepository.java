@@ -4,8 +4,7 @@ import java.util.*;
 
 import id.ac.ui.cs.advprog.eshop.model.Product;
 
-public class InMemoryRepository<T extends Product>
-        implements BaseRepository<T> {
+public class InMemoryRepository<T extends Product> implements BaseRepository<T> {
 
     protected List<T> data = new ArrayList<>();
 
@@ -19,8 +18,8 @@ public class InMemoryRepository<T extends Product>
     }
 
     @Override
-    public List<T> findAll() {
-        return new ArrayList<>(data);
+    public Iterator<T> findAll() {
+        return data.iterator();
     }
 
     @Override
@@ -39,7 +38,8 @@ public class InMemoryRepository<T extends Product>
     }
 
     @Override
-    public void delete(String id) {
-        data.removeIf(e -> e.getId().equals(id));
+    public boolean delete(String id) {
+        if(id == null) return false;
+        return data.removeIf(e -> e.getId().equals(id));
     }
 }
