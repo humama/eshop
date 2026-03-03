@@ -2,117 +2,108 @@ package id.ac.ui.cs.advprog.eshop.controller;
 
 import id.ac.ui.cs.advprog.eshop.model.Product;
 import id.ac.ui.cs.advprog.eshop.service.ProductService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.autoconfigure.thymeleaf.ThymeleafAutoConfiguration;
-import org.springframework.context.annotation.Import;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.ui.Model;
 
 import java.util.Collections;
+import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ProductController.class)
-@Import(ThymeleafAutoConfiguration.class)
-public class ProductControllerTest {
+@ExtendWith(MockitoExtension.class)
+class ProductControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
+    @Mock
     private ProductService service;
 
-    @Test
-    void getCreatePage_showsForm() throws Exception{
-        mockMvc.perform(get("/product/create"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("createProduct"))
-                .andExpect(model().attributeExists("product"));
+    @Mock
+    private Model model;
+
+    @InjectMocks
+    private ProductController controller;
+
+    private Product product;
+
+    @BeforeEach
+    void setUp() {
+        product = new Product();
+        product.setProductId("id1");
+        product.setProductName("Test Product");
+        product.setProductQuantity(5);
     }
 
     @Test
-    void postCreate_callsServiceAndRedirects() throws Exception{
-        when(service.create(any(Product.class))).thenAnswer(i -> i.getArgument(0));
+    void createProductPage_shouldReturnCreateView() {
+        String view = controller.createProductPage(model);
 
-        mockMvc.perform(post("/product/create")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("productName", "P1")
-                .param("productQuantity", "4")
-        )
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/product/list"));
-
-        verify(service, times(1)).create(any(Product.class));
+        assertEquals("createProduct", view);
+        verify(model, times(1)).addAttribute(eq("product"), any(Product.class));
     }
 
     @Test
-    void getList_showsProducts() throws Exception{
-        Product p = new Product(); p.setProductId("id"); p.setProductName("N"); p.setProductQuantity(2);
-        when(service.findAll()).thenReturn(Collections.singletonList(p));
+    void createProductPost_shouldCallServiceAndRedirect() {
+        String view = controller.createProductPost(product, model);
 
-        mockMvc.perform(get("/product/list"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("productList"))
-                .andExpect(model().attributeExists("products"));
+        verify(service, times(1)).create(product);
+        assertEquals("redirect:/product/list", view);
     }
 
     @Test
-    void editFound_rendersEdit() throws Exception{
-        Product p = new Product(); p.setProductId("abcd"); p.setProductName("X"); p.setProductQuantity(1);
-        when(service.findById("abcd")).thenReturn(p);
+    void productListPage_shouldReturnProductListView() {
+        List<Product> products = Collections.singletonList(product);
+        when(service.findAll()).thenReturn(products);
 
-        mockMvc.perform(get("/product/edit/abcd"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("editProduct"))
-                .andExpect(model().attributeExists("product"));
+        String view = controller.productListPage(model);
+
+        verify(model).addAttribute("products", products);
+        assertEquals("productList", view);
     }
 
     @Test
-    void editNotFound_redirectsToList() throws Exception{
+    void editProductPage_whenProductExists_shouldReturnEditView() {
+        when(service.findById("id1")).thenReturn(product);
+
+        String view = controller.editProductPage("id1", model);
+
+        verify(model).addAttribute("product", product);
+        assertEquals("editProduct", view);
+    }
+
+    @Test
+    void editProductPage_whenProductNotExists_shouldRedirect() {
         when(service.findById("missing")).thenReturn(null);
 
-        mockMvc.perform(get("/product/edit/missing"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/product/list"));
+        String view = controller.editProductPage("missing", model);
+
+        assertEquals("redirect:/product/list", view);
     }
 
     @Test
-    void postUpdate_callsServiceAndRedirects() throws Exception{
-        when(service.update(any(Product.class))).thenReturn(new Product());
+    void updateProductPost_shouldCallServiceAndRedirect() {
+        String view = controller.updateProductPost(product);
 
-        mockMvc.perform(post("/product/update")
-                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
-                .param("productId", "id1")
-                .param("productName", "Updated")
-                .param("productQuantity", "3")
-        )
-                .andExpect(status().is3xxRedirection());
-
-        verify(service, times(1)).update(any(Product.class));
+        verify(service).update(product);
+        assertEquals("redirect:/product/list", view);
     }
 
     @Test
-    void getDelete_callsServiceAndRedirects() throws Exception{
-        doReturn(true).when(service).delete("del1");
+    void deleteProduct_shouldCallServiceAndRedirect() {
+        String view = controller.deleteProduct("id1");
 
-        mockMvc.perform(get("/product/delete/del1"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/product/list"));
-
-        verify(service, times(1)).delete("del1");
+        verify(service).delete("id1");
+        assertEquals("redirect:/product/list", view);
     }
 
     @Test
-    void getRoot_returnsIndex() throws Exception{
-        mockMvc.perform(get("/product/"))
-                .andExpect(status().isOk())
-                .andExpect(view().name("index"));
+    void home_shouldReturnIndexView() {
+        String view = controller.home(model);
+
+        assertEquals("index", view);
     }
 }
