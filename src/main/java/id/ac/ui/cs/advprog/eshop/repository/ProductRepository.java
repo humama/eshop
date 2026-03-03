@@ -22,24 +22,24 @@ public class ProductRepository {
 
     public boolean deleteById(String id){
         if(id == null) return false;
-        return productData.removeIf(p -> id.equals(p.getProductId()));
+        return productData.removeIf(p -> id.equals(p.getId()));
     }
 
     public Product findById(String id){
         if(id == null) return null;
         for(Product p : productData){
-            if(id.equals(p.getProductId())) return p;
+            if(id.equals(p.getId())) return p;
         }
         return null;
     }
 
     public Product update(Product product){
-        if(product == null || product.getProductId() == null) return null;
+        if(product == null || product.getId() == null) return null;
         for(int i = 0; i < productData.size(); i++){
             Product p = productData.get(i);
-            if(p.getProductId() != null && p.getProductId().equals(product.getProductId())){
-                p.setProductName(product.getProductName());
-                p.setProductQuantity(product.getProductQuantity());
+            if(p.getId() != null && p.getId().equals(product.getId())){
+                p.setName(product.getName());
+                p.setQuantity(product.getQuantity());
                 productData.set(i, p);
                 return p;
             }
