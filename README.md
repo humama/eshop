@@ -535,3 +535,38 @@ Refactor berbasis SOLID membuat sistem:
 
 Penerapan SOLID sangat membantu dalam membangun sistem yang tidak hanya berjalan, tetapi juga mudah dikembangkan dan dirawat dalam jangka panjang.
 </details>
+
+<details>
+
+  <summary>Reflection modul 4</summary>
+
+## Refleksi 4: 
+
+1. Reflection on Test-Driven Development (TDD) Workflow
+
+After following the Test-Driven Development (TDD) workflow in this exercise, I found that the process was quite helpful in guiding how I implemented the system. The Red-Green-Refactor cycle forced me to first understand the requirements before writing the implementation. By writing tests first, I needed to clearly define what behavior the program should have. This helped me avoid writing unnecessary code and made the implementation more focused.
+
+When running the tests during the Green phase, failing tests helped me quickly identify which part of the code was not working correctly. Because the implementation was done step by step, debugging became easier since the possible source of errors was limited to a small portion of the code. The Refactor phase was also useful because I could improve the code structure, such as replacing hardcoded strings with the `OrderStatus` enum, while still ensuring that the program worked correctly since the tests were already in place.
+
+However, writing tests before implementation was sometimes challenging because I had to think carefully about possible scenarios and edge cases. At the beginning, this process took more time compared to directly writing the implementation. In the future, when writing more tests, I should spend more time understanding the requirements and thinking about possible edge cases earlier so the tests can cover more situations.
+
+Overall, I think the TDD workflow is useful because it encourages better planning, improves confidence in the code, and makes the development process more structured.
+
+2. Reflection on F.I.R.S.T. Testing Principles
+
+The unit tests created in this tutorial generally follow the F.I.R.S.T. principles: Fast, Independent, Repeatable, Self-validating, and Timely.
+
+The tests are **fast** because they only test small parts of the application and do not rely on external systems such as databases. In the service layer tests, Mockito was used to mock the repository, which helps keep the tests lightweight and quick to run.
+
+The tests are also **independent** because each test focuses on a specific behavior and uses a setup method to prepare the test data. This ensures that one test does not affect the result of another test.
+
+The tests are **repeatable** since they do not depend on external environments or random factors. Running the tests multiple times should produce the same results.
+
+They are **self-validating** because assertions are used to automatically check whether the result is correct or not. This allows the test framework to clearly indicate whether the tests pass or fail without manual checking.
+
+Finally, the tests are **timely** because they were written before implementing the actual functionality as part of the TDD workflow.
+
+Even though most of the F.I.R.S.T. principles were followed, there are still some improvements that could be made in the future. For example, the tests could include more edge cases to improve coverage, and the naming of some tests could be improved to make their purpose clearer.
+
+Overall, the tests already follow most of the F.I.R.S.T. principles and help ensure that the implemented features work as expected.
+</details>
