@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import id.ac.ui.cs.advprog.eshop.enums.OrderStatus;
 import id.ac.ui.cs.advprog.eshop.model.Order;
 import id.ac.ui.cs.advprog.eshop.model.Payment;
 import id.ac.ui.cs.advprog.eshop.repository.PaymentRepository;
@@ -23,19 +24,33 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = new Payment(
                 UUID.randomUUID().toString(),
                 method,
-                "WAITING_PAYMENT",
+                "PENDING",
                 paymentData
         );
 
         if (method.equalsIgnoreCase("VOUCHER")) {
+
             String voucherCode = paymentData.get("voucherCode");
 
             if (isValidVoucher(voucherCode)) {
                 payment.setStatus("SUCCESS");
-                order.setStatus("SUCCESS");
+                order.setStatus(OrderStatus.SUCCESS.getValue());
             } else {
                 payment.setStatus("REJECTED");
-                order.setStatus("FAILED");
+                order.setStatus(OrderStatus.FAILED.getValue());
+            }
+
+        } else if (method.equalsIgnoreCase("COD")) {
+
+            String address = paymentData.get("address");
+            String deliveryFee = paymentData.get("deliveryFee");
+
+            if (isEmpty(address) || isEmpty(deliveryFee)) {
+                payment.setStatus("REJECTED");
+                order.setStatus(OrderStatus.FAILED.getValue());
+            } else {
+                payment.setStatus("SUCCESS");
+                order.setStatus(OrderStatus.SUCCESS.getValue());
             }
         }
 
@@ -61,16 +76,22 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     private boolean isValidVoucher(String voucherCode) {
-        if (voucherCode == null) return false;
 
-        if (voucherCode.length() != 16) return false;
+        if (voucherCode == null || voucherCode.length() != 16) {
+            return false;
+        }
 
-        if (!voucherCode.startsWith("ESHOP")) return false;
+        if (!voucherCode.startsWith("ESHOP")) {
+            return false;
+        }
 
         long digitCount = voucherCode.chars()
                 .filter(Character::isDigit)
                 .count();
 
         return digitCount == 8;
+    }
+    private boolean isEmpty(String value) {
+        return value == null || value.trim().isEmpty();
     }
 }
