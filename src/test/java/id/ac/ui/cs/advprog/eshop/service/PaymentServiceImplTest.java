@@ -164,4 +164,76 @@ public class PaymentServiceImplTest {
 
         verify(paymentRepository, times(1)).findAll();
     }
+
+    @Test
+    void testVoucherValidShouldSetPaymentSuccess() {
+
+        Map<String, String> voucherData = new HashMap<>();
+        voucherData.put("voucherCode", "ESHOP1234ABC5678");
+
+        doReturn(new Payment("payment-1", "VOUCHER", "PENDING", paymentData))
+        .when(paymentRepository)
+        .save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "VOUCHER", voucherData);
+
+        assertEquals("SUCCESS", result.getStatus());
+        assertEquals(OrderStatus.SUCCESS.getValue(), order.getStatus());
+
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testVoucherInvalidLengthShouldRejectPayment() {
+
+        Map<String, String> voucherData = new HashMap<>();
+        voucherData.put("voucherCode", "ESHOP123"); // tidak 16 karakter
+
+        doReturn(new Payment("payment-1", "VOUCHER", "PENDING", paymentData))
+        .when(paymentRepository)
+        .save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "VOUCHER", voucherData);
+
+        assertEquals("REJECTED", result.getStatus());
+        assertEquals(OrderStatus.FAILED.getValue(), order.getStatus());
+
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testVoucherInvalidPrefixShouldRejectPayment() {
+
+        Map<String, String> voucherData = new HashMap<>();
+        voucherData.put("voucherCode", "TOKO1234ABC5678"); // tidak diawali ESHOP
+
+        doReturn(new Payment("payment-1", "VOUCHER", "PENDING", paymentData))
+        .when(paymentRepository)
+        .save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "VOUCHER", voucherData);
+
+        assertEquals("REJECTED", result.getStatus());
+        assertEquals(OrderStatus.FAILED.getValue(), order.getStatus());
+
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
+
+    @Test
+    void testVoucherInvalidDigitCountShouldRejectPayment() {
+
+        Map<String, String> voucherData = new HashMap<>();
+        voucherData.put("voucherCode", "ESHOPABCDEFGH123"); // digit tidak 8
+
+        doReturn(new Payment("payment-1", "VOUCHER", "PENDING", paymentData))
+        .when(paymentRepository)
+        .save(any(Payment.class));
+
+        Payment result = paymentService.addPayment(order, "VOUCHER", voucherData);
+
+        assertEquals("REJECTED", result.getStatus());
+        assertEquals(OrderStatus.FAILED.getValue(), order.getStatus());
+
+        verify(paymentRepository, times(1)).save(any(Payment.class));
+    }
 }
