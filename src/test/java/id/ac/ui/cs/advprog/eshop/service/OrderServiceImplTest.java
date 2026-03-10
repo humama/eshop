@@ -15,14 +15,17 @@ import java.util.NoSuchElementException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import id.ac.ui.cs.advprog.eshop.enums.OrderStatus;
 import id.ac.ui.cs.advprog.eshop.model.Order;
 import id.ac.ui.cs.advprog.eshop.model.Product;
 import id.ac.ui.cs.advprog.eshop.repository.OrderRepository;
 
+@ExtendWith(MockitoExtension.class)
 public class OrderServiceImplTest {
     
     @InjectMocks
@@ -67,7 +70,7 @@ public class OrderServiceImplTest {
         doReturn(order).when(orderRepository).findById(order.getId());
 
         assertNull(orderService.createOrder(order));
-        verify(orderRepository, times(1)).save(order);
+        verify(orderRepository, times(0)).save(order);
     }
 
     @Test
@@ -93,7 +96,7 @@ public class OrderServiceImplTest {
         assertThrows(IllegalArgumentException.class,
                 () -> orderService.updateStatus(order.getId(), "MEOW"));
 
-        verify(orderRepository, times(1)).save(any(Order.class));
+        verify(orderRepository, times(0)).save(any(Order.class));
     }
 
     @Test
@@ -102,7 +105,7 @@ public class OrderServiceImplTest {
 
         assertThrows(NoSuchElementException.class,
                 () -> orderService.updateStatus("zczc", OrderStatus.SUCCESS.getValue()));
-        verify(orderRepository, times(1)).save(any(Order.class));
+        verify(orderRepository, times(0)).save(any(Order.class));
     }
 
     @Test
