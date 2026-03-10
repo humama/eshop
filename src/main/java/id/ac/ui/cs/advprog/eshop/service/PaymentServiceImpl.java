@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import id.ac.ui.cs.advprog.eshop.enums.OrderStatus;
 import id.ac.ui.cs.advprog.eshop.model.Order;
 import id.ac.ui.cs.advprog.eshop.model.Payment;
 import id.ac.ui.cs.advprog.eshop.repository.PaymentRepository;
@@ -24,9 +23,21 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = new Payment(
                 UUID.randomUUID().toString(),
                 method,
-                "PENDING",
+                "WAITING_PAYMENT",
                 paymentData
         );
+
+        if (method.equalsIgnoreCase("VOUCHER")) {
+            String voucherCode = paymentData.get("voucherCode");
+
+            if (isValidVoucher(voucherCode)) {
+                payment.setStatus("SUCCESS");
+                order.setStatus("SUCCESS");
+            } else {
+                payment.setStatus("REJECTED");
+                order.setStatus("FAILED");
+            }
+        }
 
         paymentRepository.save(payment);
         return payment;
@@ -34,15 +45,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     public Payment setStatus(Payment payment, String status) {
-
         payment.setStatus(status);
-
-        if (status.equals("SUCCESS")) {
-            payment.getPaymentData().put("orderStatus", OrderStatus.SUCCESS.getValue());
-        } else if (status.equals("REJECTED")) {
-            payment.getPaymentData().put("orderStatus", OrderStatus.FAILED.getValue());
-        }
-
         paymentRepository.save(payment);
         return payment;
     }
@@ -55,5 +58,19 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     public List<Payment> getAllPayments() {
         return paymentRepository.findAll();
+    }
+
+    private boolean isValidVoucher(String voucherCode) {
+        if (voucherCode == null) return false;
+
+        if (voucherCode.length() != 16) return false;
+
+        if (!voucherCode.startsWith("ESHOP")) return false;
+
+        long digitCount = voucherCode.chars()
+                .filter(Character::isDigit)
+                .count();
+
+        return digitCount == 8;
     }
 }
