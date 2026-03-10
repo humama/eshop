@@ -14,7 +14,7 @@ import id.ac.ui.cs.advprog.eshop.enums.OrderStatus;
 import id.ac.ui.cs.advprog.eshop.model.Order;
 import id.ac.ui.cs.advprog.eshop.model.Product;
 
-public class OrderRepository {
+public class OrderRepositoryTest {
     OrderRepository orderRepository;
 
     List<Order> orders;
