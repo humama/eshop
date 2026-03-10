@@ -10,17 +10,14 @@ import id.ac.ui.cs.advprog.eshop.model.Payment;
 @Repository
 public class PaymentRepository {
 
-    private List<Payment> paymentData = new ArrayList<>();
+    private final List<Payment> paymentData = new ArrayList<>();
 
     public Payment save(Payment payment) {
-        int ii = 0;
-        for (Payment savedPayment : paymentData) {
-            if (savedPayment.getId().equals(payment.getId())) {
-                paymentData.remove(ii);
-                paymentData.add(ii, payment);
+        for (int i = 0; i < paymentData.size(); i++) {
+            if (paymentData.get(i).getId().equals(payment.getId())) {
+                paymentData.set(i, payment);
                 return payment;
             }
-            ii += 1;
         }
 
         paymentData.add(payment);
@@ -37,6 +34,6 @@ public class PaymentRepository {
     }
 
     public List<Payment> findAll() {
-        return paymentData;
+        return new ArrayList<>(paymentData);
     }
 }
