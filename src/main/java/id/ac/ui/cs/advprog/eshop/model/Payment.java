@@ -10,6 +10,9 @@ import lombok.Setter;
 @Getter
 public class Payment {
 
+    private static final String SUCCESS = "SUCCESS";
+    private static final String REJECTED = "REJECTED";
+
     String id;
     String method;
 
@@ -32,14 +35,18 @@ public class Payment {
     }
 
     private void validatePayment() {
-        if (method.equals("VOUCHER")) {
-            validateVoucher();
-        } else if (method.equals("COD")) {
-            validateCOD();
-        } else if (method.equals("BANK_TRANSFER")) {
-            validateBankTransfer();
-        } else {
-            this.status = "REJECTED";
+        switch (method) {
+            case "VOUCHER":
+                validateVoucher();
+                break;
+            case "COD":
+                validateCOD();
+                break;
+            case "BANK_TRANSFER":
+                validateBankTransfer();
+                break;
+            default:
+                status = REJECTED;
         }
     }
 
@@ -47,31 +54,25 @@ public class Payment {
         String voucher = paymentData.get("voucherCode");
 
         if (voucher == null || voucher.length() != 16 || !voucher.startsWith("ESHOP")) {
-            this.status = "REJECTED";
+            status = REJECTED;
             return;
         }
 
-        int digitCount = 0;
-        for (char c : voucher.toCharArray()) {
-            if (Character.isDigit(c)) digitCount++;
-        }
+        long digitCount = voucher.chars()
+                .filter(Character::isDigit)
+                .count();
 
-        if (digitCount == 8) {
-            this.status = "SUCCESS";
-        } else {
-            this.status = "REJECTED";
-        }
+        status = (digitCount == 8) ? SUCCESS : REJECTED;
     }
 
     private void validateCOD() {
         String address = paymentData.get("address");
         String deliveryFee = paymentData.get("deliveryFee");
 
-        if (address == null || address.isEmpty() ||
-            deliveryFee == null || deliveryFee.isEmpty()) {
-            this.status = "REJECTED";
+        if (isEmpty(address) || isEmpty(deliveryFee)) {
+            status = REJECTED;
         } else {
-            this.status = "SUCCESS";
+            status = SUCCESS;
         }
     }
 
@@ -79,11 +80,14 @@ public class Payment {
         String bankName = paymentData.get("bankName");
         String referenceCode = paymentData.get("referenceCode");
 
-        if (bankName == null || bankName.isEmpty() ||
-            referenceCode == null || referenceCode.isEmpty()) {
-            this.status = "REJECTED";
+        if (isEmpty(bankName) || isEmpty(referenceCode)) {
+            status = REJECTED;
         } else {
-            this.status = "SUCCESS";
+            status = SUCCESS;
         }
+    }
+
+    private boolean isEmpty(String value) {
+        return value == null || value.isEmpty();
     }
 }
